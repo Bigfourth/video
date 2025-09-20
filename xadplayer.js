@@ -132,7 +132,7 @@
       videoEl = document.createElement("video");
       el.appendChild(videoEl);
     }
-    // Thuộc tính cơ bản
+
     videoEl.classList.add("video-js", "vjs-default-skin");
     if (parseBool(el.getAttribute("data-controls"), true)) videoEl.setAttribute("controls", "");
     if (el.getAttribute("data-poster")) videoEl.setAttribute("poster", el.getAttribute("data-poster"));
@@ -183,82 +183,87 @@
   }
 
   function mountOutstream(container) {
-    const adTag = container.getAttribute("data-adtag");
-    if (!adTag) {
-      console.error("[XAD] data-adtag is required for outstream");
-      return;
-    }
-    const W = parseInt(container.getAttribute("data-width") || "640", 10);
-    const H = parseInt(container.getAttribute("data-height") || "360", 10);
-    const sticky = container.getAttribute("data-sticky"); // position string
-    const closable = parseBool(container.getAttribute("data-close"), true);
-
-    const wrapper = document.createElement("div");
-    wrapper.style.width = W + "px";
-    wrapper.style.height = H + "px";
-    wrapper.style.maxWidth = "100%";
-    wrapper.style.position = "relative";
-    wrapper.style.background = "#000";
-    wrapper.style.borderRadius = "12px";
-    wrapper.style.overflow = "hidden";
-
-    const videoEl = document.createElement("video");
-    videoEl.className = "video-js vjs-default-skin";
-    videoEl.setAttribute("playsinline", "");
-    videoEl.setAttribute("muted", "");
-    videoEl.muted = true; // outstream mặc định muted
-    videoEl.setAttribute("autoplay", ""); 
-    wrapper.appendChild(videoEl);
-
-    if (sticky) {
-      makeSticky(wrapper, sticky);
-    } else {
-      // In-article: chiếm chiều rộng cha
-      wrapper.style.width = "100%";
-      wrapper.style.height = Math.round((H / W) * 100) + "vw"; 
-      wrapper.style.maxHeight = H + "px";
-    }
-
-    if (closable) {
-      addCloseButton(wrapper, () => {
-        try { player.dispose(); } catch (e) {}
-        wrapper.remove();
-      });
-    }
-
-    container.innerHTML = "";
-    container.appendChild(wrapper);
-
-    const player = window.videojs(videoEl, {
-      fluid: true,
-      preload: "auto",
-      controls: false, // outstream: không cần controls
-      muted: true,
-    });
-
-    player.ima({
-      adTagUrl: adTag,
-      debug: parseBool(container.getAttribute("data-debug"), false),
-    });
-
-    const kickoff = once(() => {
-      try { player.ima.initializeAdDisplayContainer(); } catch (e) {}
-      try { player.ima.requestAds(); } catch (e) {}
-      // videojs-ima sẽ phát ad, sau khi xong có thể collapse
-    });
-
-    if (document.readyState === "complete") kickoff();
-    else window.addEventListener("load", kickoff);
-
-    player.on("ads-ad-ended", () => {
-      // collapse sau khi quảng cáo xong
-      if (!sticky) {
-        wrapper.style.display = "none";
-      }
-    });
-
-    return player;
+  const adTag = container.getAttribute("data-adtag");
+  if (!adTag) {
+    console.error("[XAD] data-adtag is required for outstream");
+    return;
   }
+
+  const W = parseInt(container.getAttribute("data-width") || "640", 10);
+  const H = parseInt(container.getAttribute("data-height") || "360", 10);
+  const sticky = container.getAttribute("data-sticky"); 
+  const closable = parseBool(container.getAttribute("data-close"), true);
+
+  // Wrapper
+  const wrapper = document.createElement("div");
+  wrapper.style.width = W + "px";
+  wrapper.style.height = H + "px";
+  wrapper.style.position = "relative";
+  wrapper.style.background = "#000";
+  wrapper.style.borderRadius = "12px";
+  wrapper.style.overflow = "hidden";
+
+  if (sticky) {
+    makeSticky(wrapper, sticky);
+  }
+
+  if (closable) {
+    addCloseButton(wrapper, () => {
+      try { player.dispose(); } catch (e) {}
+      wrapper.remove();
+    });
+  }
+
+  container.innerHTML = "";
+  container.appendChild(wrapper);
+
+  const videoEl = document.createElement("video");
+  videoEl.className = "video-js vjs-default-skin";
+  videoEl.setAttribute("playsinline", "");
+  videoEl.setAttribute("muted", "");
+  videoEl.muted = true;
+  videoEl.autoplay = true;
+  videoEl.width = W;
+  videoEl.height = H;
+
+  const source = document.createElement("source");
+  source.src = "https://cdn.jsdelivr.net/gh/Bigfourth/video/blank.mp4";
+  source.type = "video/mp4";
+  videoEl.appendChild(source);
+
+  wrapper.appendChild(videoEl);
+
+  const player = window.videojs(videoEl, {
+    controls: false,
+    preload: "auto",
+    fluid: true,
+  });
+
+  player.ima({
+    adTagUrl: adTag,
+    debug: parseBool(container.getAttribute("data-debug"), false),
+  });
+
+  const kickoff = once(() => {
+    try { player.ima.initializeAdDisplayContainer(); } catch (e) {}
+    try { player.play().catch(()=>{}); } catch (e) {}
+  });
+
+  if (videoEl.autoplay) {
+    kickoff();
+  } else {
+    player.one("play", kickoff);
+  }
+
+  player.on("ads-ad-ended", () => {
+    setTimeout(() => {
+      try { player.dispose(); } catch (e) {}
+      wrapper.remove();
+    }, 500);
+  });
+
+  return player;
+}
 
   async function mountAll(root = document) {
     await ensureDeps();
