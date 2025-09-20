@@ -227,7 +227,7 @@
   videoEl.height = H;
 
   const source = document.createElement("source");
-  source.src = "https://cdn.jsdelivr.net/gh/Bigfourth/video/blank.mp4";
+  source.src = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
   source.type = "video/mp4";
   videoEl.appendChild(source);
 
