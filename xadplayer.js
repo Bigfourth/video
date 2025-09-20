@@ -2,12 +2,12 @@
   "use strict";
 
   const CDN = {
-    videojs: "https://cdn.jsdelivr.net/npm/video.js@8/dist/video.min.js",
-    videojsCss: "https://cdn.jsdelivr.net/npm/video.js@8/dist/video-js.min.css",
-    contribAds: "https://cdn.jsdelivr.net/npm/videojs-contrib-ads@6.9.0/dist/videojs-contrib-ads.min.js",
-    contribAdsCss: "https://cdn.jsdelivr.net/npm/videojs-contrib-ads@6.9.0/dist/videojs-contrib-ads.css",
-    ima: "https://cdn.jsdelivr.net/npm/videojs-ima@1.10.3/dist/videojs.ima.min.js",
-    imaCss: "https://cdn.jsdelivr.net/npm/videojs-ima@1.10.3/dist/videojs.ima.css",
+    videojs: "https://cdn.jsdelivr.net/npm/video.js/dist/video.min.js",
+    videojsCss: "https://cdn.jsdelivr.net/npm/video.js/dist/video-js.min.css",
+    contribAds: "https://cdn.jsdelivr.net/npm/videojs-contrib-ads/dist/videojs-contrib-ads.min.js",
+    contribAdsCss: "https://cdn.jsdelivr.net/npm/videojs-contrib-ads/dist/videojs-contrib-ads.css",
+    ima: "https://cdn.jsdelivr.net/npm/videojs-ima/dist/videojs.ima.min.js",
+    imaCss: "https://cdn.jsdelivr.net/npm/videojs-ima/dist/videojs.ima.css",
     // Google IMA SDK
     gima: "https://imasdk.googleapis.com/js/sdkloader/ima3.js",
   };
