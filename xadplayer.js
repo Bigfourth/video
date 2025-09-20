@@ -228,7 +228,7 @@
 
   const source = document.createElement("source");
   source.src = "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8";
-  source.type = "video/mp4";
+  source.type = "application/x-mpegURL";
   videoEl.appendChild(source);
 
   wrapper.appendChild(videoEl);
