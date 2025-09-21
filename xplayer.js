@@ -183,90 +183,113 @@
   }
 
   function mountOutstream(container) {
-  const adTag = container.getAttribute("data-adtag");
-  if (!adTag) {
-    console.error("[XAD] data-adtag is required for outstream");
-    return;
-  }
-
-  const W = parseInt(container.getAttribute("data-width") || "640", 10);
-  const H = parseInt(container.getAttribute("data-height") || "360", 10);
-  const sticky = container.getAttribute("data-sticky"); 
-  const closable = parseBool(container.getAttribute("data-close"), true);
-
-  // Wrapper
-  const wrapper = document.createElement("div");
-  wrapper.style.width = W + "px";
-  wrapper.style.height = H + "px";
-  wrapper.style.position = "relative";
-  wrapper.style.background = "#000";
-  wrapper.style.borderRadius = "12px";
-  wrapper.style.overflow = "hidden";
-
-  if (sticky) {
-    makeSticky(wrapper, sticky);
-  }
-
-  if (closable) {
-    addCloseButton(wrapper, () => {
-      try { player.dispose(); } catch (e) {}
-      wrapper.remove();
+    const adTag = container.getAttribute("data-adtag");
+    if (!adTag) {
+      console.error("[XAD] data-adtag is required for outstream");
+      return null;
+    }
+  
+    const W = parseInt(container.getAttribute("data-width") || "640", 10);
+    const H = parseInt(container.getAttribute("data-height") || "360", 10);
+    const sticky = container.getAttribute("data-sticky");
+    const closable = parseBool(container.getAttribute("data-close"), true);
+    const debug = parseBool(container.getAttribute("data-debug"), false);
+  
+    // wrapper
+    const wrapper = document.createElement("div");
+    Object.assign(wrapper.style, {
+      width: W + "px",
+      height: H + "px",
+      position: "relative",
+      background: "#000",
+      borderRadius: "12px",
+      overflow: "hidden",
     });
-  }
-
-  container.innerHTML = "";
-  container.appendChild(wrapper);
-
-  const videoEl = document.createElement("video");
-  videoEl.className = "video-js vjs-default-skin";
-  videoEl.setAttribute("playsinline", "");
-  videoEl.setAttribute("autoplay", "");
-  videoEl.setAttribute("preload", "auto");  
-  videoEl.setAttribute("muted", "");
-  videoEl.setAttribute("crossorigin", "anonymous");
-  videoEl.muted = true;
-  videoEl.autoplay = true;
-  videoEl.width = W;
-  videoEl.height = H;
-
-  const source = document.createElement("source");
-  source.src = "https://cdn.pubabc.com/vietnam/Vietnam-4K-Epic-Roadtrip-Nature-landscapes-c.m3u8";
-  source.type = "application/vnd.apple.mpegurl";
-  videoEl.appendChild(source);
-
-  wrapper.appendChild(videoEl);
-
-  const player = window.videojs(videoEl, {
-    controls: false,
-    preload: "auto",
-    fluid: true,
-  });
-
-  player.ima({
-    adTagUrl: adTag,
-    debug: parseBool(container.getAttribute("data-debug"), false),
-  });
-
-  const kickoff = once(() => {
-    try { player.ima.initializeAdDisplayContainer(); } catch (e) {}
-    try { player.play().catch(()=>{}); } catch (e) {}
-  });
-
-  if (videoEl.autoplay) {
-    kickoff();
-  } else {
-    player.one("play", kickoff);
-  }
-
-  player.on("ads-ad-ended", () => {
-    setTimeout(() => {
+  
+    if (sticky) {
+      makeSticky(wrapper, sticky);
+    }
+  
+    container.innerHTML = "";
+    container.appendChild(wrapper);
+  
+    // video element
+    const videoEl = document.createElement("video");
+    videoEl.className = "video-js vjs-default-skin";
+    videoEl.setAttribute("playsinline", "");
+    videoEl.setAttribute("autoplay", "");
+    videoEl.setAttribute("preload", "auto");
+    videoEl.setAttribute("muted", "");
+    videoEl.setAttribute("crossorigin", "anonymous");
+    videoEl.muted = true;
+    videoEl.autoplay = true;
+    videoEl.width = W;
+    videoEl.height = H;
+    wrapper.appendChild(videoEl);
+  
+    // init player
+    const player = window.videojs(videoEl, {
+      controls: false,
+      preload: "auto",
+      fluid: true,
+    });
+  
+    // add source AFTER player created
+    player.src({
+      src: "https://cdn.pubabc.com/vietnam/Vietnam-4K-Epic-Roadtrip-Nature-landscapes-c.m3u8",
+      type: "application/vnd.apple.mpegurl",
+    });
+  
+    // init IMA only once player is ready
+    player.ready(() => {
+      player.ima({
+        adTagUrl: adTag,
+        debug: debug,
+      });
+  
+      const kickoff = () => {
+        try { player.ima.initializeAdDisplayContainer(); } catch (e) {}
+        player.play().catch(() => {
+          // nếu autoplay bị block → chờ user click
+          player.one("click", () => player.play());
+        });
+      };
+  
+      // Autoplay hoặc chờ user gesture
+      if (videoEl.autoplay) {
+        kickoff();
+      } else {
+        player.one("play", kickoff);
+      }
+    });
+  
+    // add close button sau khi player init
+    if (closable) {
+      addCloseButton(wrapper, () => {
+        cleanup();
+      });
+    }
+  
+    // dọn dẹp sau ads
+    player.on("ads-ad-ended", () => {
+      setTimeout(() => {
+        cleanup();
+      }, 500);
+    });
+  
+    // fallback khi không có fill
+    player.on("adserror", () => {
+      console.warn("[XAD] Ad error, fallback to content");
+      player.play().catch(() => {});
+    });
+  
+    function cleanup() {
       try { player.dispose(); } catch (e) {}
       wrapper.remove();
-    }, 500);
-  });
-
-  return player;
-}
+    }
+  
+    return player;
+  }
 
   async function mountAll(root = document) {
     await ensureDeps();
