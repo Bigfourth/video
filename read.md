@@ -11,6 +11,7 @@ Outstream shows video ads automatically in your page layout, without requiring o
 ### HTML Structure
 
 ```html
+<script src="https://cdn.jsdelivr.net/gh/Bigfourth/video@latest/xadplayer.js" async></script>
 <div class="xad-outstream"
      data-mode="outstream"
      data-adtag="ADUNIT"
@@ -54,6 +55,7 @@ Instream plays **pre/mid/post-roll ads** within your video content.
 ### HTML Structure
 
 ```html
+<script src="https://cdn.jsdelivr.net/gh/Bigfourth/video@latest/xadplayer.js" async></script>
 <video class="xad-video"
        data-mode="instream"
        data-src="LINK VIDEO"
