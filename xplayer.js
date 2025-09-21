@@ -228,8 +228,9 @@
 
   const source = document.createElement("source");
   source.src = "https://cdn.pubabc.com/vietnam/Vietnam-4K-Epic-Roadtrip-Nature-landscapes-c.m3u8";
-  source.type = "application/x-mpegURL";
+  source.type = "application/vnd.apple.mpegurl";
   videoEl.appendChild(source);
+  videoEl.setAttribute("crossorigin", "anonymous");
 
   wrapper.appendChild(videoEl);
 
