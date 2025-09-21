@@ -220,7 +220,10 @@
   const videoEl = document.createElement("video");
   videoEl.className = "video-js vjs-default-skin";
   videoEl.setAttribute("playsinline", "");
+  videoEl.setAttribute("autoplay", "");
+  videoEl.setAttribute("preload", "auto");  
   videoEl.setAttribute("muted", "");
+  videoEl.setAttribute("crossorigin", "anonymous");
   videoEl.muted = true;
   videoEl.autoplay = true;
   videoEl.width = W;
@@ -230,7 +233,6 @@
   source.src = "https://cdn.pubabc.com/vietnam/Vietnam-4K-Epic-Roadtrip-Nature-landscapes-c.m3u8";
   source.type = "application/vnd.apple.mpegurl";
   videoEl.appendChild(source);
-  videoEl.setAttribute("crossorigin", "anonymous");
 
   wrapper.appendChild(videoEl);
 
